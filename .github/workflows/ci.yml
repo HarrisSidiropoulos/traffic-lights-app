@@ -31,9 +31,6 @@ jobs:
       - name: Run tests
         run: pnpm test -- --run
 
-      - name: Build project
-        run: GITHUB_PAGES=true pnpm build
-
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
@@ -55,7 +52,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Build project
-        run: pnpm build
+        run: GITHUB_PAGES=true pnpm build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
