@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@marp-team/marp-cli": "^4.2.3",
     "@playwright/test": "^1.55.0",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.10",
