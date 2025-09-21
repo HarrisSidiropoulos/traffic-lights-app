@@ -1,0 +1,45 @@
+{
+  "name": "traffic-lights-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "npx http-server dist -c-1",
+    "start:presentation": "npx http-server dist/presentation -c-1",
+    "build": "tsc -b && vite build",
+    "postbuild": "npx @marp-team/marp-cli presentation.md --html --allow-local-files -o dist/presentation/index.html",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "dependencies": {
+    "@xstate/react": "^6.0.0",
+    "classnames": "^2.5.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "xstate": "^5.21.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@xstate/graph": "^3.0.4",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "jsdom": "^27.0.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4"
+  }
+}

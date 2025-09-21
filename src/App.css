@@ -1,0 +1,66 @@
+/* Pedestrian button styles */
+.pedestrian-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+}
+.app {
+  font-family: sans-serif;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.lights-container {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+}
+
+.traffic-light,
+.pedestrian-light {
+  width: 60px;
+  background: #333;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.traffic-light {
+  height: 180px;
+}
+
+.pedestrian-light {
+  height: 120px;
+}
+
+.light {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.light.inactive {
+  background: #555;
+}
+
+.light.red {
+  background: red;
+}
+
+.light.yellow {
+  background: yellow;
+}
+
+.light.green {
+  background: green;
+}
+
+.light.walk {
+  background: green;
+}
+
+.light.dontWalk {
+  background: red;
+}
