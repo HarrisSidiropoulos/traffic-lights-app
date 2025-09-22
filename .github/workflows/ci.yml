@@ -29,6 +29,9 @@ jobs:
       - name: Run tests
         run: pnpm test -- --run
 
+      - name: Run lint
+        run: pnpm lint
+
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
