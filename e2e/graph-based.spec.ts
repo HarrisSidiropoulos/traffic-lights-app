@@ -22,12 +22,6 @@ const CLASSES = {
   LIGHT_WALK: "light walk",
 } as const;
 
-// Valid traffic light states for verification
-type TrafficState = "green" | "yellow" | "red";
-
-// Valid transition keys for waiting
-type TransitionKey = "green->yellow" | "yellow->red" | "red->green";
-
 const verifyTrafficLightState = {
   green: async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_GREEN)).toHaveClass(
@@ -84,29 +78,6 @@ const verifyTrafficLightState = {
   },
 };
 
-const performAction = {
-  PEDESTRIAN_REQUEST: async (page: Page) => {
-    await page.click(`[data-testid="${SELECTORS.PEDESTRIAN_BTN}"]`);
-  },
-};
-
-// Helper functions to avoid repetitive type casting
-const verifyState = (state: string, page: Page) => {
-  const stateVerifier = verifyTrafficLightState[state as TrafficState];
-  return stateVerifier?.(page);
-};
-
-const waitForTransition = (fromState: string, toState: string, page: Page) => {
-  const transitionWaiter =
-    waitForTimerTransition[`${fromState}->${toState}` as TransitionKey];
-  return transitionWaiter?.(page);
-};
-
-const performEventAction = (eventType: string, page: Page) => {
-  const actionFunction = performAction[eventType as keyof typeof performAction];
-  return actionFunction?.(page);
-};
-
 const waitForTimerTransition = {
   "green->yellow": async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_YELLOW)).toHaveClass(
@@ -130,6 +101,32 @@ const waitForTimerTransition = {
       }
     );
   },
+} as const;
+
+type TransitionKey = keyof typeof waitForTimerTransition;
+type TrafficState = keyof typeof verifyTrafficLightState;
+
+const performAction = {
+  PEDESTRIAN_REQUEST: async (page: Page) => {
+    await page.click(`[data-testid="${SELECTORS.PEDESTRIAN_BTN}"]`);
+  },
+};
+
+// Helper functions to avoid repetitive type casting
+const verifyState = (state: string, page: Page) => {
+  const stateVerifier = verifyTrafficLightState[state as TrafficState];
+  return stateVerifier?.(page);
+};
+
+const waitForTransition = (fromState: string, toState: string, page: Page) => {
+  const transitionWaiter =
+    waitForTimerTransition[`${fromState}->${toState}` as TransitionKey];
+  return transitionWaiter?.(page);
+};
+
+const performEventAction = (eventType: string, page: Page) => {
+  const actionFunction = performAction[eventType as keyof typeof performAction];
+  return actionFunction?.(page);
 };
 
 test.describe("XState Graph-Based E2E Tests", () => {
@@ -190,7 +187,6 @@ test.describe("XState Graph-Based E2E Tests", () => {
       path.steps.forEach((step, stepIndex) => {
         const currentState = String(step.state.value);
 
-        // Handle initial state
         if (stepIndex === 0) {
           test(`Initial state: ${currentState}`, async ({ page }) => {
             await verifyState(currentState, page);
@@ -198,18 +194,15 @@ test.describe("XState Graph-Based E2E Tests", () => {
           return;
         }
 
-        // Setup common variables for non-initial steps
         const prevStep = path.steps[stepIndex - 1];
         const prevState = String(prevStep.state.value);
         const hasEvent = !!step.event;
 
-        // Create test based on step type
         const testName = hasEvent
           ? `Event handling: ${step.event?.type} in ${prevState} state`
           : `State transition: ${prevState} → ${currentState}`;
 
         test(testName, async ({ page }) => {
-          // Replay all previous steps to reach current position
           for (let i = 0; i < stepIndex; i++) {
             const currentStepState = String(path.steps[i].state.value);
             const currentStep = path.steps[i];
@@ -226,17 +219,14 @@ test.describe("XState Graph-Based E2E Tests", () => {
             await verifyState(currentStepState, page);
           }
 
-          // Execute the current step action
           if (hasEvent && step.event) {
             await performEventAction(step.event.type, page);
           }
 
-          // Handle state transition if no event
           if (!hasEvent) {
             await waitForTransition(prevState, currentState, page);
           }
 
-          // Verify final state
           await verifyState(currentState, page);
         });
       });
