@@ -1,20 +1,12 @@
 import { useMachine, useSelector } from "@xstate/react";
 import classNames from "classnames";
-import {
-  trafficLightMachine,
-  pedestrianLightMachine,
-  intersectionMachine,
-} from "./machines";
+import { trafficLightMachine, pedestrianLightMachine } from "./machines";
 import "./App.css";
 
 export default function App() {
-  const [intersection, send] = useMachine(intersectionMachine);
+  const [traffic, send] = useMachine(trafficLightMachine);
   const pedestrianState = useSelector(
-    intersection.context.pedestrian,
-    (state) => state!.value
-  );
-  const trafficState = useSelector(
-    intersection.context.traffic,
+    traffic.context.pedestrian,
     (state) => state!.value
   );
 
@@ -34,8 +26,8 @@ export default function App() {
                   key={state}
                   data-testid={`traffic-${state}`}
                   className={classNames("light", {
-                    [state]: trafficState === state,
-                    inactive: trafficState !== state,
+                    [state]: traffic.value === state,
+                    inactive: traffic.value !== state,
                   })}
                 />
               ))}
