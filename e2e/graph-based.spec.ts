@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { trafficLightMachine } from "../src/machines";
-import { getSimplePaths } from "@xstate/graph";
+import { getShortestPaths, getSimplePaths } from "@xstate/graph";
 
 const baseUrl = "http://localhost:5173";
 
@@ -13,7 +13,7 @@ const SELECTORS = {
   PEDESTRIAN_BTN: "pedestrian-btn",
 } as const;
 
-const EXPECTED_CLASSES = {
+const CLASSES = {
   LIGHT_GREEN: "light green",
   LIGHT_YELLOW: "light yellow",
   LIGHT_RED: "light red",
@@ -22,58 +22,64 @@ const EXPECTED_CLASSES = {
   LIGHT_WALK: "light walk",
 } as const;
 
+// Valid traffic light states for verification
+type TrafficState = "green" | "yellow" | "red";
+
+// Valid transition keys for waiting
+type TransitionKey = "green->yellow" | "yellow->red" | "red->green";
+
 const verifyTrafficLightState = {
   green: async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_GREEN)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_GREEN
+      CLASSES.LIGHT_GREEN
     );
     await expect(page.getByTestId(SELECTORS.TRAFFIC_YELLOW)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
     await expect(page.getByTestId(SELECTORS.TRAFFIC_RED)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
     await expect(page.getByTestId(SELECTORS.PEDESTRIAN_DONT_WALK)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_DONT_WALK
+      CLASSES.LIGHT_DONT_WALK
     );
     await expect(page.getByTestId(SELECTORS.PEDESTRIAN_WALK)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
   },
   yellow: async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_YELLOW)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_YELLOW,
+      CLASSES.LIGHT_YELLOW,
       { timeout: 10000 }
     );
     await expect(page.getByTestId(SELECTORS.TRAFFIC_GREEN)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
     await expect(page.getByTestId(SELECTORS.TRAFFIC_RED)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
     await expect(page.getByTestId(SELECTORS.PEDESTRIAN_DONT_WALK)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_DONT_WALK
+      CLASSES.LIGHT_DONT_WALK
     );
     await expect(page.getByTestId(SELECTORS.PEDESTRIAN_WALK)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
   },
   red: async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_RED)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_RED,
+      CLASSES.LIGHT_RED,
       { timeout: 15000 }
     );
     await expect(page.getByTestId(SELECTORS.TRAFFIC_GREEN)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
     await expect(page.getByTestId(SELECTORS.TRAFFIC_YELLOW)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
     await expect(page.getByTestId(SELECTORS.PEDESTRIAN_DONT_WALK)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_INACTIVE
+      CLASSES.LIGHT_INACTIVE
     );
     await expect(page.getByTestId(SELECTORS.PEDESTRIAN_WALK)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_WALK
+      CLASSES.LIGHT_WALK
     );
   },
 };
@@ -84,16 +90,33 @@ const performAction = {
   },
 };
 
+// Helper functions to avoid repetitive type casting
+const verifyState = (state: string, page: Page) => {
+  const stateVerifier = verifyTrafficLightState[state as TrafficState];
+  return stateVerifier?.(page);
+};
+
+const waitForTransition = (fromState: string, toState: string, page: Page) => {
+  const transitionWaiter =
+    waitForTimerTransition[`${fromState}->${toState}` as TransitionKey];
+  return transitionWaiter?.(page);
+};
+
+const performEventAction = (eventType: string, page: Page) => {
+  const actionFunction = performAction[eventType as keyof typeof performAction];
+  return actionFunction?.(page);
+};
+
 const waitForTimerTransition = {
   "green->yellow": async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_YELLOW)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_YELLOW,
+      CLASSES.LIGHT_YELLOW,
       { timeout: 6000 }
     );
   },
   "yellow->red": async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_RED)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_RED,
+      CLASSES.LIGHT_RED,
       {
         timeout: 3000,
       }
@@ -101,7 +124,7 @@ const waitForTimerTransition = {
   },
   "red->green": async (page: Page) => {
     await expect(page.getByTestId(SELECTORS.TRAFFIC_GREEN)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_GREEN,
+      CLASSES.LIGHT_GREEN,
       {
         timeout: 7000,
       }
@@ -113,37 +136,48 @@ test.describe("XState Graph-Based E2E Tests", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(baseUrl);
     await expect(page.getByTestId(SELECTORS.TRAFFIC_GREEN)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_GREEN,
+      CLASSES.LIGHT_GREEN,
       {
         timeout: 5000,
       }
     );
   });
 
-  const naturalPaths = getSimplePaths(trafficLightMachine);
+  const naturalPaths = getShortestPaths(trafficLightMachine);
 
   naturalPaths.forEach((path, index) => {
-    test(`should test natural timer-based path ${index + 1}`, async ({
-      page,
-    }) => {
-      for (const [stepIndex, step] of path.steps.entries()) {
+    test.describe(`Natural Timer Sequence ${index + 1}`, () => {
+      path.steps.forEach((step, stepIndex) => {
         const currentState = String(step.state.value);
 
-        if (stepIndex > 0) {
+        if (stepIndex === 0) {
+          test(`Initial state: ${currentState}`, async ({ page }) => {
+            await verifyState(currentState, page);
+          });
+        } else {
           const prevStep = path.steps[stepIndex - 1];
           const prevState = String(prevStep.state.value);
-          const transitionKey =
-            `${prevState}->${currentState}` as keyof typeof waitForTimerTransition;
 
-          if (waitForTimerTransition[transitionKey]) {
-            await waitForTimerTransition[transitionKey](page);
-          }
+          test(`Timer transition: ${prevState} → ${currentState}`, async ({
+            page,
+          }) => {
+            for (let i = 0; i < stepIndex; i++) {
+              const currentStepState = String(path.steps[i].state.value);
+
+              if (i > 0) {
+                const prevStepState = String(path.steps[i - 1].state.value);
+
+                await waitForTransition(prevStepState, currentStepState, page);
+              }
+
+              await verifyState(currentStepState, page);
+            }
+
+            await waitForTransition(prevState, currentState, page);
+            await verifyState(currentState, page);
+          });
         }
-
-        await verifyTrafficLightState[
-          currentState as keyof typeof verifyTrafficLightState
-        ]?.(page);
-      }
+      });
     });
   });
 
@@ -152,35 +186,60 @@ test.describe("XState Graph-Based E2E Tests", () => {
   });
 
   pedestrianPaths.forEach((path, index) => {
-    test(`should test pedestrian request scenario ${index + 1}`, async ({
-      page,
-    }) => {
-      for (const [stepIndex, step] of path.steps.entries()) {
+    test.describe(`Pedestrian Request Scenario ${index + 1}`, () => {
+      path.steps.forEach((step, stepIndex) => {
         const currentState = String(step.state.value);
 
-        if (step.event) {
-          const actionFunction =
-            performAction[step.event.type as keyof typeof performAction];
-          if (actionFunction) {
-            await actionFunction(page);
-          }
+        // Handle initial state
+        if (stepIndex === 0) {
+          test(`Initial state: ${currentState}`, async ({ page }) => {
+            await verifyState(currentState, page);
+          });
+          return;
         }
 
-        if (stepIndex > 0 && !step.event) {
-          const prevStep = path.steps[stepIndex - 1];
-          const prevState = String(prevStep.state.value);
-          const transitionKey =
-            `${prevState}->${currentState}` as keyof typeof waitForTimerTransition;
+        // Setup common variables for non-initial steps
+        const prevStep = path.steps[stepIndex - 1];
+        const prevState = String(prevStep.state.value);
+        const hasEvent = !!step.event;
 
-          if (waitForTimerTransition[transitionKey]) {
-            await waitForTimerTransition[transitionKey](page);
+        // Create test based on step type
+        const testName = hasEvent
+          ? `Event handling: ${step.event?.type} in ${prevState} state`
+          : `State transition: ${prevState} → ${currentState}`;
+
+        test(testName, async ({ page }) => {
+          // Replay all previous steps to reach current position
+          for (let i = 0; i < stepIndex; i++) {
+            const currentStepState = String(path.steps[i].state.value);
+            const currentStep = path.steps[i];
+
+            if (currentStep.event) {
+              await performEventAction(currentStep.event.type, page);
+            }
+
+            if (i > 0 && !currentStep.event) {
+              const prevStepState = String(path.steps[i - 1].state.value);
+              await waitForTransition(prevStepState, currentStepState, page);
+            }
+
+            await verifyState(currentStepState, page);
           }
-        }
 
-        await verifyTrafficLightState[
-          currentState as keyof typeof verifyTrafficLightState
-        ]?.(page);
-      }
+          // Execute the current step action
+          if (hasEvent && step.event) {
+            await performEventAction(step.event.type, page);
+          }
+
+          // Handle state transition if no event
+          if (!hasEvent) {
+            await waitForTransition(prevState, currentState, page);
+          }
+
+          // Verify final state
+          await verifyState(currentState, page);
+        });
+      });
     });
   });
 
@@ -194,14 +253,14 @@ test.describe("XState Graph-Based E2E Tests", () => {
     await page.click(pedestrianBtnSelector);
 
     await expect(page.getByTestId(SELECTORS.TRAFFIC_YELLOW)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_YELLOW,
+      CLASSES.LIGHT_YELLOW,
       { timeout: 1000 }
     );
 
     await page.click(pedestrianBtnSelector);
 
     await expect(page.getByTestId(SELECTORS.TRAFFIC_RED)).toHaveClass(
-      EXPECTED_CLASSES.LIGHT_RED,
+      CLASSES.LIGHT_RED,
       {
         timeout: 3000,
       }
