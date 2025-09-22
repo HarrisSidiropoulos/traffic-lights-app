@@ -12,52 +12,83 @@ describe("machines", () => {
   });
 
   describe("pedestrianLightMachine", () => {
-    it("should handle pedestrian light changes", () => {
+    it("should start in dontWalk state", () => {
       const pedestrianLightActor = createActor(pedestrianLightMachine).start();
-
-      // Initial state should be dontWalk
       expect(pedestrianLightActor.getSnapshot().value).toBe("dontWalk");
+      pedestrianLightActor.stop();
+    });
 
-      // Send SAFE_TO_WALK event, should transition to walk
+    it("should transition to walk when receiving SAFE_TO_WALK event", () => {
+      const pedestrianLightActor = createActor(pedestrianLightMachine).start();
       pedestrianLightActor.send({ type: "SAFE_TO_WALK" });
       expect(pedestrianLightActor.getSnapshot().value).toBe("walk");
+      pedestrianLightActor.stop();
+    });
 
-      // Send UNSAFE_TO_WALK event, should transition back to dontWalk
+    it("should transition back to dontWalk when receiving UNSAFE_TO_WALK event", () => {
+      const pedestrianLightActor = createActor(pedestrianLightMachine).start();
+      pedestrianLightActor.send({ type: "SAFE_TO_WALK" });
       pedestrianLightActor.send({ type: "UNSAFE_TO_WALK" });
       expect(pedestrianLightActor.getSnapshot().value).toBe("dontWalk");
-
       pedestrianLightActor.stop();
     });
   });
 
   describe("trafficLightMachine", () => {
-    it("should handle pedestrian requests and traffic light changes", () => {
+    it("should start in green state", () => {
       const trafficLightActor = createActor(trafficLightMachine).start();
-
-      // Initial state should be green
       expect(trafficLightActor.getSnapshot().value).toBe("green");
+      trafficLightActor.stop();
+    });
 
-      // After 5 seconds, it should transition to yellow
+    it("should transition from green to yellow after 5 seconds", () => {
+      const trafficLightActor = createActor(trafficLightMachine).start();
       vi.advanceTimersByTime(5000);
       expect(trafficLightActor.getSnapshot().value).toBe("yellow");
+      trafficLightActor.stop();
+    });
 
-      // After 2 seconds, it should transition to red
-      vi.advanceTimersByTime(2000);
+    it("should transition from yellow to red after 2 seconds", () => {
+      const trafficLightActor = createActor(trafficLightMachine).start();
+      vi.advanceTimersByTime(5000); // green to yellow
+      vi.advanceTimersByTime(2000); // yellow to red
       expect(trafficLightActor.getSnapshot().value).toBe("red");
+      trafficLightActor.stop();
+    });
 
-      // After 6 seconds, it should transition back to green
-      vi.advanceTimersByTime(6000);
+    it("should transition from red back to green after 6 seconds", () => {
+      const trafficLightActor = createActor(trafficLightMachine).start();
+      vi.advanceTimersByTime(5000); // green to yellow
+      vi.advanceTimersByTime(2000); // yellow to red
+      vi.advanceTimersByTime(6000); // red to green
       expect(trafficLightActor.getSnapshot().value).toBe("green");
+      trafficLightActor.stop();
+    });
 
-      // Send a pedestrian request while green
+    it("should transition from green to yellow when receiving pedestrian request", () => {
+      const trafficLightActor = createActor(trafficLightMachine).start();
       trafficLightActor.send({ type: "PEDESTRIAN_REQUEST" });
       expect(trafficLightActor.getSnapshot().value).toBe("yellow");
+      trafficLightActor.stop();
+    });
 
-      // After 2 seconds, it should transition to red
+    it("should complete full cycle after pedestrian request", () => {
+      const trafficLightActor = createActor(trafficLightMachine).start();
+
+      // Should be green initially
+      expect(trafficLightActor.getSnapshot().value).toBe("green");
+
+      // Send pedestrian request
+      trafficLightActor.send({ type: "PEDESTRIAN_REQUEST" });
+
+      // Should be yellow after pedestrian request
+      expect(trafficLightActor.getSnapshot().value).toBe("yellow");
+
+      // Should transition to red after 2 seconds
       vi.advanceTimersByTime(2000);
       expect(trafficLightActor.getSnapshot().value).toBe("red");
 
-      // After 6 seconds, it should transition back to green
+      // Should transition back to green after 6 seconds
       vi.advanceTimersByTime(6000);
       expect(trafficLightActor.getSnapshot().value).toBe("green");
 
