@@ -1,25 +1,8 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { trafficLightMachine } from "../src/machines";
 import { getShortestPaths } from "@xstate/graph";
-import {
-  SELECTORS,
-  CLASSES,
-  baseUrl,
-  verifyTrafficLightState,
-  performAction,
-} from "./constants";
-
-type TrafficState = keyof typeof verifyTrafficLightState;
-
-const verifyState = (state: string, page: Page) => {
-  const stateVerifier = verifyTrafficLightState[state as TrafficState];
-  return stateVerifier?.(page);
-};
-
-const performEventAction = (eventType: string, page: Page) => {
-  const actionFunction = performAction[eventType as keyof typeof performAction];
-  return actionFunction?.(page);
-};
+import { SELECTORS, CLASSES, baseUrl } from "./constants";
+import { performEventAction, verifyState } from "./utils";
 
 test.describe("XState Graph-Based E2E Tests", () => {
   test.beforeEach(async ({ page }) => {
@@ -31,17 +14,18 @@ test.describe("XState Graph-Based E2E Tests", () => {
   shortestTrafficLightPaths.forEach((path, index) => {
     test.describe(`Natural Timer Sequence ${index + 1}`, () => {
       path.steps.forEach((step, stepIndex) => {
-        const currentState = String(step.state.value);
+        const currentState = `${step.state.value}`;
 
         const prevStep = path.steps[stepIndex - 1];
-        const prevState =
-          prevStep && prevStep.state ? String(prevStep.state.value) : "Initial";
+        const prevState = prevStep?.state
+          ? `${prevStep.state.value}`
+          : "Initial";
 
         test(`Timer transition: ${prevState} → ${currentState}`, async ({
           page,
         }) => {
           for (let i = 0; i <= stepIndex; i++) {
-            const currentStepState = String(path.steps[i].state.value);
+            const currentStepState = `${path.steps[i].state.value}`;
 
             await verifyState(currentStepState, page);
           }
@@ -57,11 +41,12 @@ test.describe("XState Graph-Based E2E Tests", () => {
   pedestrianPaths.forEach((path, index) => {
     test.describe(`Pedestrian Request Scenario ${index + 1}`, () => {
       path.steps.forEach((step, stepIndex) => {
-        const currentState = String(step.state.value);
+        const currentState = `${step.state.value}`;
 
         const prevStep = path.steps[stepIndex - 1];
-        const prevState =
-          prevStep && prevStep.state ? String(prevStep.state.value) : "Initial";
+        const prevState = prevStep?.state
+          ? `${prevStep.state.value}`
+          : "Initial";
         const hasEvent = !!step.event;
 
         const testName = hasEvent
@@ -70,7 +55,7 @@ test.describe("XState Graph-Based E2E Tests", () => {
 
         test(testName, async ({ page }) => {
           for (let i = 0; i <= stepIndex; i++) {
-            const currentStepState = String(path.steps[i].state.value);
+            const currentStepState = `${path.steps[i].state.value}`;
             const currentStep = path.steps[i];
 
             if (currentStep.event) {

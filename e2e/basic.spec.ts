@@ -1,14 +1,7 @@
-import { test, Page } from "@playwright/test";
+import { test } from "@playwright/test";
 import { trafficLightMachine } from "../src/machines";
-import { baseUrl, verifyTrafficLightState } from "./constants";
-
-type TrafficState = "green" | "yellow" | "red";
-
-// Helper function to avoid repetitive type casting
-const verifyState = (state: string, page: Page) => {
-  const stateVerifier = verifyTrafficLightState[state as TrafficState];
-  return stateVerifier?.(page);
-};
+import { baseUrl } from "./constants";
+import { verifyState } from "./utils";
 
 test.describe("Traffic Light State Transitions", () => {
   for (const state of Object.keys(trafficLightMachine.states)) {
