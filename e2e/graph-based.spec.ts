@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { trafficLightMachine } from "../src/machines";
-import { getShortestPaths, getSimplePaths } from "@xstate/graph";
+import { getShortestPaths } from "@xstate/graph";
 import {
   SELECTORS,
   CLASSES,
@@ -32,9 +32,9 @@ test.describe("XState Graph-Based E2E Tests", () => {
     );
   });
 
-  const naturalPaths = getShortestPaths(trafficLightMachine);
+  const shortestTrafficLightPaths = getShortestPaths(trafficLightMachine);
 
-  naturalPaths.forEach((path, index) => {
+  shortestTrafficLightPaths.forEach((path, index) => {
     test.describe(`Natural Timer Sequence ${index + 1}`, () => {
       path.steps.forEach((step, stepIndex) => {
         const currentState = String(step.state.value);
@@ -56,7 +56,7 @@ test.describe("XState Graph-Based E2E Tests", () => {
     });
   });
 
-  const pedestrianPaths = getSimplePaths(trafficLightMachine, {
+  const pedestrianPaths = getShortestPaths(trafficLightMachine, {
     events: [{ type: "PEDESTRIAN_REQUEST" }],
   });
 
