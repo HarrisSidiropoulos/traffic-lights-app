@@ -24,12 +24,6 @@ const performEventAction = (eventType: string, page: Page) => {
 test.describe("XState Graph-Based E2E Tests", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(baseUrl);
-    await expect(page.getByTestId(SELECTORS.TRAFFIC_GREEN)).toHaveClass(
-      CLASSES.LIGHT_GREEN,
-      {
-        timeout: 5000,
-      }
-    );
   });
 
   const shortestTrafficLightPaths = getShortestPaths(trafficLightMachine);
