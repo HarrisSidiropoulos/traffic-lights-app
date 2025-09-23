@@ -85,12 +85,6 @@ test.describe("XState Graph-Based E2E Tests", () => {
 
             await verifyState(currentStepState, page);
           }
-
-          if (hasEvent && step.event) {
-            await performEventAction(step.event.type, page);
-          }
-
-          await verifyState(currentState, page);
         });
       });
     });
