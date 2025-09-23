@@ -40,7 +40,7 @@ test.describe("XState Graph-Based E2E Tests", () => {
         test(`Timer transition: ${prevState} → ${currentState}`, async ({
           page,
         }) => {
-          for (let i = 0; i < stepIndex; i++) {
+          for (let i = 0; i <= stepIndex; i++) {
             const currentStepState = String(path.steps[i].state.value);
 
             await verifyState(currentStepState, page);
@@ -69,7 +69,7 @@ test.describe("XState Graph-Based E2E Tests", () => {
           : `State transition: ${prevState} → ${currentState}`;
 
         test(testName, async ({ page }) => {
-          for (let i = 0; i < stepIndex; i++) {
+          for (let i = 0; i <= stepIndex; i++) {
             const currentStepState = String(path.steps[i].state.value);
             const currentStep = path.steps[i];
 
