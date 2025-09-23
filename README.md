@@ -25,7 +25,26 @@ This project includes comprehensive end-to-end testing using Playwright, with a 
 
 ### Graph-Based E2E Testing
 
-The project uses XState's `@xstate/graph` library to automatically generate test paths based on the state machine definition. This approach provides several advantages:
+The project uses XState's `@xstate/graph` library to automatically generate test paths based on the state machine definition.
+
+#### How Path Generation Works
+
+Each "path" represents a unique sequence of state transitions in the traffic light state machine, starting from the initial state. A path is made up of steps, where each step records:
+
+- The current state (e.g., `green`, `yellow`, `red`)
+- The event that triggered the transition (e.g., `PEDESTRIAN_REQUEST`, timer events)
+
+By traversing the state machine graph, the test suite generates all possible paths, including both automatic transitions (like timers) and user-triggered events (like pressing the pedestrian button). The tests then simulate these event sequences in the UI, verifying that the system behaves as expected at every step.
+
+**Example Path:**
+
+1. Start in `green` (initial state)
+2. Event: `PEDESTRIAN_REQUEST` → transition to `yellow`
+3. Event: timer expires → transition to `red`
+
+This approach ensures that both typical and edge-case scenarios are covered, and that the implementation always matches the state machine model.
+
+This approach provides several advantages:
 
 - **Complete Coverage**: Automatically tests all possible state transitions and paths through the traffic light system
 - **Model-Based Testing**: Tests are derived directly from the XState machine definition, ensuring consistency between implementation and testing
