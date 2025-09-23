@@ -75,3 +75,9 @@ export const verifyTrafficLightState = {
     );
   },
 };
+
+export const performAction = {
+  PEDESTRIAN_REQUEST: async (page: Page) => {
+    await page.click(`[data-testid="${SELECTORS.PEDESTRIAN_BTN}"]`);
+  },
+};
