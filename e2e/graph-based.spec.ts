@@ -76,33 +76,28 @@ test.describe("XState Graph-Based E2E Tests", () => {
       path.steps.forEach((step, stepIndex) => {
         const currentState = String(step.state.value);
 
-        if (stepIndex === 0) {
-          test(`Initial state: ${currentState}`, async ({ page }) => {
-            await verifyState(currentState, page);
-          });
-        } else {
-          const prevStep = path.steps[stepIndex - 1];
-          const prevState = String(prevStep.state.value);
+        const prevStep = path.steps[stepIndex - 1];
+        const prevState =
+          prevStep && prevStep.state ? String(prevStep.state.value) : "Initial";
 
-          test(`Timer transition: ${prevState} → ${currentState}`, async ({
-            page,
-          }) => {
-            for (let i = 0; i < stepIndex; i++) {
-              const currentStepState = String(path.steps[i].state.value);
+        test(`Timer transition: ${prevState} → ${currentState}`, async ({
+          page,
+        }) => {
+          for (let i = 0; i < stepIndex; i++) {
+            const currentStepState = String(path.steps[i].state.value);
 
-              if (i > 0) {
-                const prevStepState = String(path.steps[i - 1].state.value);
+            if (i > 0) {
+              const prevStepState = String(path.steps[i - 1].state.value);
 
-                await waitForTransition(prevStepState, currentStepState, page);
-              }
-
-              await verifyState(currentStepState, page);
+              await waitForTransition(prevStepState, currentStepState, page);
             }
 
-            await waitForTransition(prevState, currentState, page);
-            await verifyState(currentState, page);
-          });
-        }
+            await verifyState(currentStepState, page);
+          }
+
+          await waitForTransition(prevState, currentState, page);
+          await verifyState(currentState, page);
+        });
       });
     });
   });
@@ -116,15 +111,9 @@ test.describe("XState Graph-Based E2E Tests", () => {
       path.steps.forEach((step, stepIndex) => {
         const currentState = String(step.state.value);
 
-        if (stepIndex === 0) {
-          test(`Initial state: ${currentState}`, async ({ page }) => {
-            await verifyState(currentState, page);
-          });
-          return;
-        }
-
         const prevStep = path.steps[stepIndex - 1];
-        const prevState = String(prevStep.state.value);
+        const prevState =
+          prevStep && prevStep.state ? String(prevStep.state.value) : "Initial";
         const hasEvent = !!step.event;
 
         const testName = hasEvent
