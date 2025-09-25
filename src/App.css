@@ -1,18 +1,20 @@
-/* Pedestrian button styles */
-.pedestrian-btn {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+* {
+  box-sizing: border-box;
 }
+
 .app {
-  font-family: sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   text-align: center;
   margin-top: 2rem;
+  transform: translateZ(0);
+  will-change: auto;
 }
 
 .lights-container {
   display: flex;
   justify-content: center;
   gap: 4rem;
+  contain: layout style;
 }
 
 .traffic-light,
@@ -24,6 +26,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .traffic-light {
@@ -39,28 +43,65 @@
   height: 40px;
   border-radius: 50%;
   margin: 0 auto;
+  transition: background-color 0.15s ease-out;
+  will-change: background-color;
+  transform: translateZ(0);
 }
 
 .light.inactive {
-  background: #555;
+  background-color: #555;
 }
 
 .light.red {
-  background: red;
+  background-color: #ff4444;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
 }
 
 .light.yellow {
-  background: yellow;
+  background-color: #ffdd44;
+  box-shadow: 0 0 10px rgba(255, 221, 68, 0.5);
 }
 
 .light.green {
-  background: green;
+  background-color: #44ff44;
+  box-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
 }
 
 .light.walk {
-  background: green;
+  background-color: #44ff44;
+  box-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
 }
 
 .light.dontWalk {
-  background: red;
+  background-color: #ff4444;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+}
+
+.pedestrian-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.15s ease-out, transform 0.1s ease-out;
+  transform: translateZ(0);
+  will-change: background-color, transform;
+}
+
+.pedestrian-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.pedestrian-btn:active {
+  transform: translateY(0);
+}
+
+h1,
+h2 {
+  margin: 0 0 1rem 0;
+  contain: layout style;
 }
