@@ -31,18 +31,18 @@
 }
 
 .traffic-light {
-  height: 180px;
+  height: auto;
 }
 
 .pedestrian-light {
-  height: 120px;
+  height: auto;
 }
 
 .light {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  margin: 0 auto;
+  margin: 5px auto;
   transition: background-color 0.15s ease-out;
   will-change: background-color;
   transform: translateZ(0);
@@ -53,27 +53,32 @@
 }
 
 .light.red {
-  background-color: #ff4444;
+  background-color: red;
   box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
 }
 
 .light.yellow {
-  background-color: #ffdd44;
+  background-color: yellow;
+  box-shadow: 0 0 10px rgba(255, 221, 68, 0.5);
+}
+
+.light.orange {
+  background-color: orange;
   box-shadow: 0 0 10px rgba(255, 221, 68, 0.5);
 }
 
 .light.green {
-  background-color: #44ff44;
+  background-color: green;
   box-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
 }
 
 .light.walk {
-  background-color: #44ff44;
+  background-color: green;
   box-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
 }
 
 .light.dontWalk {
-  background-color: #ff4444;
+  background-color: red;
   box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
 }
 
